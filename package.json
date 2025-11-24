@@ -27,6 +27,7 @@
     "@nestjs/microservices": "^11.1.8",
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/typeorm": "^11.0.0",
     "@types/cookie-parser": "^1.4.10",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -38,10 +39,12 @@
     "nestjs-pino": "^4.4.1",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
+    "pg": "^8.16.3",
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.2",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "typeorm": "^0.3.27"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

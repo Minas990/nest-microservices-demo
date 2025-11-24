@@ -3,6 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UsersRepository } from './users.repository';
 import * as bcrypt from 'bcrypt';
 import { GetUserDto } from './dto/get-user.dto';
+import { Role, User } from '@app/common';
 
 @Injectable()
 export class UsersService 
@@ -11,28 +12,17 @@ export class UsersService
 
     async create(createUserDto:CreateUserDto)
     {
-        await this.validateCreateUserDto(createUserDto);
-        return this.userRepo.create({
+        await this.validateCreateUser(createUserDto);
+        const user = new User({
             ...createUserDto,
-            password:await bcrypt.hash(createUserDto.password,10)
+            password: await bcrypt.hash(createUserDto.password, 10),
+            roles:createUserDto.roles?.map(roleDto => new Role(roleDto))
         });
+        console.log(user);
+        return this.userRepo.create(user);
     }
     
-    async verifyUser(email:string,password:string)
-    {
-        const user = await this.userRepo.findOne({email});
-        const passwordIsValid = await bcrypt.compare(password,user.password);
-        if(!passwordIsValid) 
-            throw new UnauthorizedException('creds are wrong');
-        return user;
-    }
-    
-    async getUser(getUserDto:GetUserDto)
-    {
-        return this.userRepo.findOne(getUserDto);
-    }
-
-    private async validateCreateUserDto(createUserDto:CreateUserDto)
+    private async validateCreateUser(createUserDto:CreateUserDto)
     {
         try
         {
@@ -44,4 +34,20 @@ export class UsersService
         }
         throw new UnprocessableEntityException('email already exist');
     }
+
+    async verifyUser(email:string,password:string)
+    {
+        const user = await this.userRepo.findOne({email});
+        const passwordIsValid = await bcrypt.compare(password,user.password);
+        if(!passwordIsValid) 
+            throw new UnauthorizedException('creds are wrong');
+        return user;
+    }
+    
+    async getUser(getUserDto:GetUserDto)
+    {
+        return this.userRepo.findOne(getUserDto,{roles:true});
+    }
+
+
 }

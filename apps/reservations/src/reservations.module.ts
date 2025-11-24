@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ReservationsController } from './reservations.controller';
 import { ReservationsService } from './reservations.service';
 import { DatabaseModule } from '@app/common';
-import { ReservationDocument, ReservationSchema } from './models/reservations.schema';
+import { Reservation } from './models/reservations.entity';
 import { LoggerModule } from '@app/common/logger';
 import { ReservationRepository } from './reservations.repository';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -13,7 +13,7 @@ import { AUTH_SERVICE, PAYMENTS_SERVICE } from '@app/common/constants/services';
 @Module({
   imports: [
     DatabaseModule,
-    DatabaseModule.forFeature([{name:ReservationDocument.name,schema:ReservationSchema}]),
+    DatabaseModule.forFeature([Reservation]),
     LoggerModule,
     ConfigModule.forRoot({
       isGlobal:true,
@@ -25,7 +25,9 @@ import { AUTH_SERVICE, PAYMENTS_SERVICE } from '@app/common/constants/services';
         AUTH_PORT:Joi.number().required(),
         PAYMENT_PORT:Joi.number().required(),
       }),
-      envFilePath:'./apps/reservations/.env'
+      envFilePath:['./apps/reservations/.env','.env']
+      // envFilePath:'./apps/reservations/.env',
+      
     }),
     ClientsModule.registerAsync([
       {
@@ -63,3 +65,5 @@ import { AUTH_SERVICE, PAYMENTS_SERVICE } from '@app/common/constants/services';
   providers: [ReservationsService,ReservationRepository],
 })
 export class ReservationsModule {}
+
+

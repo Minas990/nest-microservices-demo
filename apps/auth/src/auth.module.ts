@@ -20,7 +20,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
                 JWT_EXPIRATION:Joi.number().required(),
                 HTTP_PORT:Joi.number().required()
             }),
-            envFilePath:'./apps/auth/.env'
+            envFilePath:['./apps/auth/.env','.env']
         }),
         JwtModule.registerAsync({
             useFactory:(cs:ConfigService)=>{

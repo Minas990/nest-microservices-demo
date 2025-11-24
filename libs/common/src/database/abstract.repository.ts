@@ -1,58 +1,66 @@
 import { Logger, NotFoundException } from "@nestjs/common";
-import { AbstractDocument } from "./abstract.schema";
-import { FilterQuery, Model, Types, UpdateQuery } from "mongoose";
+import { AbstractEntity } from "./abstract.entity";
+import { EntityManager, FindOptionsRelations, FindOptionsWhere, Repository } from "typeorm";
+import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity.js";
 
-export abstract class AbstractRepository<TDocument extends AbstractDocument>
+export abstract class AbstractRepository<T extends AbstractEntity<T>>
 {
     protected readonly abstract logger:Logger;
-    constructor(protected readonly model: Model<TDocument>){}
-
-    async create(document:Omit<TDocument,'_id'>)
+    constructor(
+        private readonly entityRepository: Repository<T>,
+        private readonly entityManaager: EntityManager
+    )
     {
-        const doc = new this.model({
-            ...document,
-            _id: new Types.ObjectId()
-        });
-        return (await doc.save()).toJSON() as unknown as TDocument;
+
     }
 
-    async findOne(filterQuery:FilterQuery<TDocument>)
+    async create(entity:T): Promise<T>
     {
-        const doc = await this.model.findOne(filterQuery,{},{lean:true});
-        if(!doc)
+        return this.entityManaager.save(entity);
+    }
+
+    async findOne(
+        where: FindOptionsWhere<T>,
+        relations?:FindOptionsRelations<T>
+    )
+    {
+        const entity = await this.entityRepository.findOne({where,relations});
+        if(!entity)
         {
-            this.logger.warn('no such doc');
-            throw new NotFoundException('no such doc');
+            this.logger.warn('no such entity');
+            throw new NotFoundException('no such entity');
         }
-        return doc as unknown as TDocument; 
+        return entity;
     }
 
-    async find(filterQuery:FilterQuery<TDocument>)
-    {
-        const docs = await this.model.find(filterQuery,{},{lean:true});
-        return docs as unknown as TDocument[];
-    }
 
-    async findOneAndUpdate(filterQuery:FilterQuery<TDocument>,updateQuery:UpdateQuery<TDocument>)
+
+    async findOneAndUpdate(where: FindOptionsWhere<T> , partialEntity: QueryDeepPartialEntity<T>)
     {
-        const doc =await this.model.findOneAndUpdate(filterQuery,updateQuery,{lean:true,new:true});
-        if(!doc)
+        const entity =await this.entityRepository.update(where,partialEntity);
+        if(!entity.affected)
         {
-            this.logger.warn('no such doc');
-            throw new NotFoundException('no such doc');
+            this.logger.warn('no such entity where',where);
+            throw new NotFoundException('no such entity');
         }
-        return doc as unknown as TDocument; 
+        return this.findOne(where);
     }
 
-    async findOneAndDelete(filterQuery:FilterQuery<TDocument>)
+    async find(where : FindOptionsWhere<T> )
     {
-        const doc =await this.model.findOneAndDelete(filterQuery,{lean:true});
-        if(!doc)
+        const entities = await this.entityRepository.findBy(where);
+        return entities;
+    }
+
+    async findOneAndDelete(where: FindOptionsWhere<T>)
+    {
+        const entity = await this.entityRepository.delete(where);
+        if(entity.affected==0)
         {
-            this.logger.warn('no such doc');
-            throw new NotFoundException('no such doc');
+            this.logger.warn('no such entity');
+            throw new NotFoundException('no such entity');
         }
-        return doc as unknown as TDocument; 
+        return entity;
     }
 
 }
